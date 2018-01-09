@@ -1,0 +1,208 @@
+function file_data=read_retri_data(fid,line,pixel,exit_status,time)
+
+error_read_status=-1;
+frewind(fid);
+missing_value=-1.26765E+030;
+% line_pixel_flag=['Line/XPix:',num2str(line),num2str(pixel)];
+% [fid,error_status]=skip_char(fid,line_pixel_flag);
+% 
+% if(error_status==error_read_status)
+%         fprintf('%s',['can not find ',num2str(line), num2str(pixel),'data']); 
+%         return;
+% end
+% 
+% fgetl(fid);
+% fgetl(fid);
+% exit_string=fgetl(fid);
+% format_string=['%d%d','%s%d%d%d%d%f'];
+% temp_exit_status=textscan(exit_string,format_string,'TreatAsEmpty','NA');
+% exit_status=temp_exit_status{1};
+
+if exit_status>0
+    %--------------------------------------------------------------------------
+    %loacate the line/pixel position
+
+    linpix_flag=['Line/XPix:',num2str(line),num2str(pixel),time];
+    [fid,error_status]=skip_char(fid,linpix_flag);
+    if(error_status==error_read_status)
+        fprintf('%s',['can not find ',num2str(line), num2str(pixel),'data']); 
+        return;
+    end
+    %--------------------------------------------------------------------------
+    %open the oz_prof file
+    %filename='F:\ozone\test_result\no_soft_calibration__L0853-0853_X15-15.out';
+
+    %--------------------------------------------------------------------------
+    flag_ozprof='Exit Status';
+    [fid,error_status]=skip_char(fid,flag_ozprof);
+    if(error_status==error_read_status)
+         fprintf('%s','can not find Atmosphere and ozone profiles'); 
+         return;
+    end
+    
+    fgetl(fid);
+    fgetl(fid);
+    fgetl(fid);
+    
+    %get albedo
+    format_string=['%s%d',repmat('%f',[1,4])];
+    data_temp=textscan(fid,format_string,1,'TreatAsEmpty','NA');
+    file_data.albedo=data_temp{5};
+    
+    %get cloud fraction
+    format_string=['%s',repmat('%f',[1,3]),'%d%s%f'];
+    data_temp=textscan(fid,format_string,1,'TreatAsEmpty','NA');
+    file_data.cldfrac=data_temp{2};
+    
+    flag_ozprof='Fitted trace gases and uncertainty:';
+    [fid,error_status]=skip_char(fid,flag_ozprof);
+    if(error_status==error_read_status)
+         fprintf('%s','can not find Atmosphere and ozone profiles'); 
+         return;
+    end
+    
+    fgetl(fid);
+    format_string=['%d%s',repmat('%s',[1,10])];
+    data_temp=textscan(fid,format_string,1,'TreatAsEmpty','NA');
+    file_data.SO2_vcd=data_temp{6};
+    %data_str=fgetl(fid);
+    %data_atm=textscan(fid,'%2d %7.3f %6.3f %7.3f %7.3f %7.3f %7.3f %5.3f %5.3f',25,'TreatAsEmpty','NA');
+%     format_string=['%d',repmat('%7.3f',[1,8])];
+%     atm_lines=25;
+%     textscan(fid,format_string,atm_lines,'TreatAsEmpty','NA');
+%     format_string=['%s%s',repmat('%7.3f',[1,4])];
+%     temp_totaloz=textscan(fid,format_string,1,'TreatAsEmpty','NA');
+%     temp_stratoz=textscan(fid,format_string,1,'TreatAsEmpty','NA');
+%     temp_tropooz=textscan(fid,format_string,1,'TreatAsEmpty','NA');
+    
+%     file_data.toa_oz=temp_totaloz{4};
+%     file_data.stra_oz=temp_stratoz{4};
+%     file_data.tro_oz=temp_tropooz{4};
+    
+%     atm.total_apoz=temp_totaloz{3};
+%     atm.stra_apoz=temp_stratoz{3};
+%     atm.trop_apoz=temp_tropooz{3};
+    
+%     atm.total_oz=temp_totaloz{4};
+%     atm.stra_oz=temp_stratoz{4};
+       
+
+
+
+
+    %save the data
+%     atm.pressure=data_atm{1,2};
+%     atm.height=data_atm{1,3};
+%     atm.tempurature=data_atm{1,4};
+%     atm.ozap=data_atm{1,5};
+%     atm.ozapstd=data_atm{1,6};
+%     atm.ozprof=data_atm{1,7};
+%     atm.std=data_atm{1,8};
+%     atm.noisestd=data_atm{1,9};
+    %--------------------------------------------------------------------------
+
+    %--------------------------------------------------------------------------
+    % %read in average kernel
+    % flag_ak='Average kernel';
+    % [fid,error_status]=skip_char(fid,flag_ak);
+    % if(error_status==error_read_status)
+    %    fprintf('%s','can not find average kernel'); 
+    %    return;
+    % end
+    % ak_lines=24;
+    % ak_cloumns=24;
+    % format_string=repmat('%10.2f',[1,ak_cloumns]);
+    % data_ak=textscan(fid,format_string,ak_lines,'TreatAsEmpty','NA');
+    % ak=cell2mat(data_ak);
+    % %--------------------------------------------------------------------------
+    % 
+    % %--------------------------------------------------------------------------
+    % %read in weighting function
+    % flag_wgtfunc='Weighting Function';
+    % [fid,error_status]=skip_char(fid,flag_wgtfunc);
+    % if(error_status==error_read_status)
+    %    fprintf('%s','can not find weighting function'); 
+    %    return;
+    % end
+    % 
+    % wf_lines=115;
+    % wf_cloumns=34;
+    % format_string=repmat('%30.25f',[1,wf_cloumns]);
+    % data_wf=textscan(fid,format_string,wf_lines,'TreatAsEmpty','NA');
+    % wf=cell2mat(data_wf);
+    % 
+    % %--------------------------------------------------------------------------
+    % %read in radiance calibration
+    % flag_rc='Radiance Calibration';
+    % [fid,error_status]=skip_char(fid,flag_rc);
+    % if(error_status==error_read_status)
+    %    fprintf('%s','can not find radiance calibration'); 
+    %    return;
+    % end
+    % rc_lines=1115;
+    % rc_cloumns=5;
+    % 
+    % format_string=repmat('%10.5f',[1,rc_cloumns]);
+    % data_rc=textscan(fid,format_string,rc_lines,'TreatAsEmpty','NA');
+    % rc.wave=data_rc{1};
+    % rc.fiespec=data_rc{2};
+    % rc.simspec=data_rc{3};
+    % rc.clmspec=data_rc{4};
+    % rc.actspec=data_rc{5};
+    % %--------------------------------------------------------------------------
+    % 
+    % %--------------------------------------------------------------------------
+    % %fitted variables and uncertainty
+    % flag_var='Fitted variables and uncertainty';
+    % [fid,error_status]=skip_char(fid,flag_var);
+    % if(error_status==error_read_status)
+    %    fprintf('%s','can not find fitted variables and uncertainty'); 
+    %    return;
+    % end
+    % var_lines=34;
+    % var_cloumns=3;
+    % format_string=['%d %s',repmat('%10.2f',[1,var_cloumns])];
+    % data_var=textscan(fid,format_string,var_lines,'TreatAsEmpty','NA');
+    % var.name=data_var{2};
+    % var.vari=data_var{3};
+    % var.std=data_var{4};
+    % var.noisestd=data_var{5};
+    % %--------------------------------------------------------------------------
+    % 
+    % 
+    % %--------------------------------------------------------------------------
+    % %save data as a struture and close file
+    
+    % file_data.ak=ak;
+    % file_data.var=var;
+    % file_data.rc=rc;
+    % file_data.wf=wf;
+else
+%     atm.total_apoz=missing_value;
+%     atm.stra_apoz=missing_value;
+%     atm.trop_apoz=missing_value;
+%     
+%     atm.total_oz=missing_value;
+%     atm.stra_oz=missing_value;
+%     atm.trop_oz=missing_value;
+%       file_data.tro_oz=missing_value;
+%       file_data.toa_oz=missing_value;
+%       file_data.stra_oz=missing_value;
+       file_data.SO2_vcd=missing_value;
+end
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+

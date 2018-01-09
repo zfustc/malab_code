@@ -1,0 +1,82 @@
+clear;
+clc;
+error_open_status=-1;
+missing_value=-1.26765E+030;
+max_lines=411;
+max_cols=60;
+du2mol=2.69E+16;
+%-----------------------------------
+%struture:filedata{
+%                  struture:atm
+%                  double(24x24):ak
+%                  struture:var
+%                  struture:rc
+%                  double(123x34):wf
+%                 }
+%       
+%-----------------------------------
+% filename='F:\ozone\test_result\soft_calibration_0905_L0853-0853.out';
+file_dir='F:\ozone\1107\';
+SO2_path_list=dir(strcat(file_dir,'*.out'));
+file_num=length(SO2_path_list);
+%  filename='F:\ozone\test_result\test_ozonesone_L0924-0924.out';
+% fid=fopen(filename);
+% if(fid==error_open_status)
+%    fprintf('%s','failed open the ozone profile file'); 
+% end
+
+tro_oz=zeros(max_lines,max_cols);
+albedo=zeros(max_lines,max_cols);
+cldfrac=zeros(max_lines,max_cols);
+% total_oz=zeros(max_lines,max_cols);
+
+tro_oz(:,:)=missing_value;
+albedo(:,:)=missing_value;
+cldfrac(:,:)=missing_value;
+% total_oz(:,:)=missing_value;
+
+% file_data=cell(lin_pix_num,1);
+
+if file_num>0
+    for j=1:file_num
+        
+        file_name= SO2_path_list(j).name;
+        file_path=strcat(file_dir,file_name);
+        fid=fopen(file_path);
+        %-------------------------------------------------------------------------
+        %get all lines exit_status and pixels 
+        [lin_pix,lin_pix_num]=skip_line_pixel(fid);
+        %--------------------------------------------------------------------------
+        %get line pix data
+
+        
+        for i=1:lin_pix_num
+            frewind(fid);
+            line=lin_pix{i}.line;
+            pixel=lin_pix{i}.pixel;
+            exit_status=lin_pix{i}.exit_status;
+            time=lin_pix{i}.time{:};
+            temp_oz=read_retri_data(fid,line,pixel,exit_status,time);
+            line=line/4+1;   
+            tro_oz(line,pixel)= temp_oz.SO2_vcd;
+            albedo(line,pixel)= temp_oz.albedo;
+            cldfrac(line,pixel)=temp_oz.cldfrac;
+%             total_oz(line,pixel)=temp_oz.toa_oz;
+        end
+        fclose(fid);
+    end
+end
+%------------------------
+%write tro_oz data into a file
+%------------------------
+
+out_filename='F:\ozone\toxcz\albedo.txt';
+% out_filename1='F:\ozone\test_result\omi_toa_oz.txt';
+
+write_data(out_filename,tro_oz);
+% trite_data(out_filename1,omi_toa_oz);
+
+% fclose(fid);
+
+
+

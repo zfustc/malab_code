@@ -1,0 +1,124 @@
+clear;
+clc;
+clf;
+
+
+%--------------------------------------
+%read retrieval result from omi algorithm
+omi_file='F:\ozone\1107\SO2_vcd.txt';
+albedo_file='F:\ozone\1107\albedo.txt';
+cldfrac_file='F:\ozone\1107\cldfrac.txt';
+SO2_vcd=importdata(omi_file);
+albedo=importdata(albedo_file);
+cldfrac=importdata(cldfrac_file);
+
+omi_l1_file='F:\ozone\toxcz\OMI-Aura_L1-OML1BRUG_2007m0205t0451-o13615_v003-2011m0124t225351-p1.he4';
+info=hdfinfo(omi_l1_file);
+lati_set='/Earth UV-2 Swath/Geolocation Fields/Latitude';
+longi_set='/Earth UV-2 Swath/Geolocation Fields/Longitude';
+L1_lati=hdfread(omi_l1_file,lati_set);
+L1_longi=hdfread(omi_l1_file,longi_set);
+
+%------------
+%xbin=4
+
+lati=zeros(60,411);
+longi=zeros(60,411);
+temp_lati=zeros(60,4);
+temp_longi=zeros(60,4);
+for i=1:410
+    j=(i-1)*4+1;
+    temp_lati=L1_lati(j:j+3,:)';
+    temp_longi=L1_longi(j:j+3,:)';
+    lati(:,i)=mean(temp_lati,2);
+    longi(:,i)=mean(temp_longi,2);
+end
+
+ filename = 'F:\ozone\20060205\OMI-Aura_L2-PROFOZ_2007m0205t0451-o13615_v003-2010m1009t101230.he5';%num 3 orbit every day
+%  info=h5info(filename);
+%  data_set_tro3='/HDFEOS/SWATHS/OMI Vertical Ozone Profile/Data Fields/O3TroposphericColumn';
+ 
+ %------------------
+ %Geolocation fields
+ %-------------------
+ 
+ %attributes
+ ozprof_groups='/HDFEOS/SWATHS/OMI Vertical Ozone Profile';
+ nYbin=h5readatt(filename,ozprof_groups,'nYbin');
+ 
+ geo_fields=[ozprof_groups,'/Geolocation Fields'];
+ data_set_longi=[geo_fields,'/Longitude'];
+ data_set_lati=[geo_fields,'/Latitude'];
+%  file_attribute_set='/HDFEOS/ADDITONAL/FILE_ATTRIBUTES';
+ 
+ L2_lati=h5read(filename,data_set_lati);
+ L2_longi=h5read(filename,data_set_longi);
+ 
+%  temp_lati=L2_lati(:,213:214);
+%  L1_lati(853,:)=temp_lati(1,:);
+%  
+%  L1_longi(853:854,:)=L2_longi(:,213:214);
+ 
+
+%--------------------------------
+%plot map
+%--------------------------------
+test_fill;
+hold on;
+
+%------------------------
+%plot omi data
+max_lines=60;
+max_cloumns=411;
+% lati=L2_lati;
+% longi=L2_longi;
+tro_total_oz=SO2_vcd';
+albedo_1=albedo';
+cldfrac_1=cldfrac';
+% tro_total_oz=tro_total_oz;
+
+% tro_total_oz(:,923)=tro_total_oz(:,924);
+% tro_total_oz(:,925)=tro_total_oz(:,924);
+missing_value=-1.267650e+30;
+
+%  
+ for i=270:366-1
+     for j=1:max_lines-1
+        
+        i_L2=i;
+        plongi=[longi(j,i_L2),longi(j,i_L2+1),longi(j+1,i_L2+1),longi(j+1,i_L2)];
+        plati =[lati(j,i_L2),lati(j,i_L2+1),lati(j+1,i_L2+1),lati(j+1,i_L2)];
+        tro_oz=mean(mean(tro_total_oz(j:j+1,i:i+1)));
+        albedo_temp=mean(mean(albedo_1(j:j+1,i:i+1)));
+        cldfrac_temp=mean(mean(cldfrac_1(j:j+1,i:i+1)));
+        %-----------------
+        %find out unfitted pixels
+        %-----------------
+        unfitted_idx=find(tro_total_oz(j:j+1,i:i+1)==missing_value);
+%         negative_idx=find(tro_total_oz(j:j+1,i:i+1)<0);
+        
+        if length(unfitted_idx)<1&&cldfrac_temp<0.3&&
+            H_F1=fill(plongi,plati,tro_oz);
+            set(H_F1,{'LineStyle'},{'none'}) %ÉèÖÃÑÕÉ«ºÍÏß¿í
+        end
+        hold on;
+     end
+ end
+ colormap(jet(256));
+cba=colorbar;
+set(get(cba,'Title'),'string',' ');
+% t=get(cba,'Yticklabel');
+% t=strcat(t,'DU');
+% set(cba,'Yticklabel',t);
+caxis([0 1]);
+ axis([70,140,0,70]);
+% grid on;
+% scatter(-86.64,34.72,10,'filled','r');
+% text(-86.64,34.72,'ºà´ÄÎ¬¶û','Color','red','FontSize',10); 
+
+out_name='F:\ozone\1107\albedo_cldfrac_le_0.3.png';
+saveas(gca,out_name,'png');
+
+
+
+% data_set_lati=''
